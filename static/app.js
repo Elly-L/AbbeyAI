@@ -36,9 +36,10 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    // Check if AI response exists
+    // Process AI response before displaying
     if (data.response) {
-      appendMessage("ai", data.response);
+      let formattedResponse = formatResponse(data.response);
+      appendMessage("ai", formattedResponse);
     } else {
       console.warn("⚠️ No response received from AI.");
       appendMessage("ai", "Error: No response from AI.");
@@ -52,11 +53,22 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
   }
 });
 
+/**
+ * Formats AI response:
+ * 1. Replaces "Gemini" with "EltekAI"
+ * 2. Converts **bold text** to <b>bold text</b>
+ */
+function formatResponse(text) {
+  return text
+    .replace(/Gemini/gi, "EltekAI")  // Case-insensitive replacement of "Gemini"
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Converts **bold** to <b>bold</b>
+}
+
 function appendMessage(sender, text) {
   const chatLog = document.getElementById("chatLog");
   const messageDiv = document.createElement("div");
   messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
-  messageDiv.textContent = text;
+  messageDiv.innerHTML = text; // ✅ Use innerHTML to render bold formatting
   chatLog.appendChild(messageDiv);
 }
 
