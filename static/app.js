@@ -62,7 +62,7 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
  */
 function formatResponse(text) {
   return text
-    .replace(/Gemini/gi, "EltekAI")  // Case-insensitive replacement of "Gemini"
+    .replace(/Gemini/gi, "AbbeyAI")  // Case-insensitive replacement of "Gemini"
     .replace(/\bGoogle\b/gi, "Eltek") // Replace "Google" anywhere in the text
     .replace(/trained by Eltek/gi, "trained by Eltek in Kenya") // Ensures training info is accurate
     .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Converts **bold** to <b>bold</b>
