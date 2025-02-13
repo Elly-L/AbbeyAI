@@ -7,6 +7,9 @@ app = Flask(__name__)
 # Load API key from environment variables
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
+if not ANTHROPIC_API_KEY:
+    print("⚠️ ERROR: Missing Anthropic API Key! Check Render Environment Variables.")
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -14,15 +17,19 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message")
+
+    if not user_message:
+        return jsonify({"response": "Error: No message received!"}), 400
+
     prompt = f"User: {user_message}\nAssistant:"
 
     headers = {
         "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY  # ✅ Corrected header name for Anthropic API
+        "x-api-key": ANTHROPIC_API_KEY  # ✅ Ensure correct API key format
     }
 
     payload = {
-        "model": "claude-2",  # ✅ Ensure correct model name
+        "model": "claude-2",  # ✅ Ensure valid model name
         "prompt": prompt,
         "max_tokens_to_sample": 150
     }
@@ -36,11 +43,11 @@ def chat():
         if response.status_code == 200:
             return jsonify({"response": response_data.get("completion", "No response from AI.")})
         else:
-            print(f"API Error: {response_data}")  # ✅ Print API error details
+            print(f"⚠️ API Error: {response_data}")  # ✅ Print API error details
             return jsonify({"response": f"Error from API: {response_data}"}), 500
-    except Exception as e:
-        print(f"Request Failed: {str(e)}")  # ✅ Print error message
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Request Failed: {str(e)}")  # ✅ Logs exact failure in Render logs
         return jsonify({"response": "Error: Failed to connect to Anthropic API."}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)  # ✅ Allows Render to bind properly
