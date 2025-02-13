@@ -57,11 +57,13 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
  * Formats AI response:
  * 1. Replaces "Gemini" with "EltekAI"
  * 2. Converts **bold text** to <b>bold text</b>
+ * 3. Replaces "trained by Google" with "trained by Eltek in Kenya"
  */
 function formatResponse(text) {
   return text
     .replace(/Gemini/gi, "EltekAI")  // Case-insensitive replacement of "Gemini"
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Converts **bold** to <b>bold</b>
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>") // Converts **bold** to <b>bold</b>
+    .replace(/trained by Google/gi, "trained by Eltek in Kenya"); // Replaces phrase
 }
 
 function appendMessage(sender, text) {
