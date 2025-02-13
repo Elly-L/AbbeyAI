@@ -28,8 +28,9 @@ def chat():
         "x-api-key": ANTHROPIC_API_KEY  # ✅ Ensure correct API key format
     }
 
+    # ✅ Switched from "claude-2" to "claude-instant-1" for lower cost
     payload = {
-        "model": "claude-2",  # ✅ Ensure valid model name
+        "model": "claude-instant-1",  # ✅ Cheaper & faster model
         "prompt": prompt,
         "max_tokens_to_sample": 150
     }
