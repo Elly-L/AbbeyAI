@@ -1,54 +1,66 @@
-import os
-import requests
-from flask import Flask, request, jsonify, render_template
+document.getElementById("chatForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const userInput = document.getElementById("userInput");
+  const chatLog = document.getElementById("chatLog");
+  const message = userInput.value.trim();
 
-app = Flask(__name__)
+  if (!message) return;
 
-# Load API key from environment variables
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-if not ANTHROPIC_API_KEY:
-    print("⚠️ ERROR: Missing Anthropic API Key! Check your Render environment variables.")
+  // Append user's message to chat log
+  appendMessage("user", message);
+  userInput.value = "";
+  scrollChatToBottom();
 
-@app.route("/")
-def index():
-    return render_template("index.html")
+  try {
+    console.log("📡 Sending request to backend...");
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_message = request.json.get("message")
-    if not user_message:
-        return jsonify({"response": "Error: No message received!"}), 400
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
 
-    prompt = f"User: {user_message}\nAssistant:"
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY  # Ensure the header is correct
+    // Check if response is valid JSON
+    const responseText = await response.text();
+    console.log("✅ Raw Response:", responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (jsonError) {
+      console.error("❌ Failed to parse JSON response:", responseText);
+      appendMessage("ai", "Error: Invalid server response.");
+      return;
     }
-    payload = {
-        "model": "claude-2",  # Make sure this model name is valid for your API key
-        "prompt": prompt,
-        "max_tokens_to_sample": 150
+
+    // Check if AI response exists
+    if (data.response) {
+      appendMessage("ai", data.response);
+    } else {
+      console.warn("⚠️ No response received from AI.");
+      appendMessage("ai", "Error: No response from AI.");
     }
-    api_url = "https://api.anthropic.com/v1/complete"
+    
+    scrollChatToBottom();
+  } catch (error) {
+    console.error("❌ Fetch Error:", error);
+    appendMessage("ai", "Error: Failed to connect to server.");
+    scrollChatToBottom();
+  }
+});
 
-    try:
-        response = requests.post(api_url, json=payload, headers=headers)
-        # Try to decode JSON; if it fails, log the response text.
-        try:
-            response_data = response.json()
-        except Exception as json_err:
-            print(f"❌ Failed to decode JSON. Status Code: {response.status_code}. Response Text: {response.text}")
-            return jsonify({"response": "Error: Received invalid response from Anthropic API."}), 500
+function appendMessage(sender, text) {
+  const chatLog = document.getElementById("chatLog");
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
+  messageDiv.textContent = text;
+  chatLog.appendChild(messageDiv);
+}
 
-        if response.status_code == 200:
-            return jsonify({"response": response_data.get("completion", "No response from AI.")})
-        else:
-            print(f"⚠️ API Error: {response_data}")
-            return jsonify({"response": f"Error from API: {response_data}"}), 500
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Request Failed: {str(e)}")
-        return jsonify({"response": "Error: Failed to connect to Anthropic API."}), 500
-
-if __name__ == "__main__":
-    # Bind to 0.0.0.0 so that Render can reach your service
-    app.run(host="0.0.0.0", port=5000)
+function scrollChatToBottom() {
+  const chatLog = document.getElementById("chatLog");
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
