@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 
 # Load API key from environment variables
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()  # ✅ Strip extra spaces/newline
 
 if not ANTHROPIC_API_KEY:
     print("⚠️ ERROR: Missing Anthropic API Key! Check Render Environment Variables.")
