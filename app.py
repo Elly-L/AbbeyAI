@@ -1,44 +1,44 @@
-document.getElementById("chatForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const userInput = document.getElementById("userInput");
-    const message = userInput.value.trim();
-    if (!message) return;
-  
-    // Append user's message to chat log
-    appendMessage("user", message);
-    userInput.value = "";
-    scrollChatToBottom();
-  
-    // Call the backend API to get the AI response
-    try {
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message })
-      });
-      const data = await response.json();
-      appendMessage("ai", data.response);
-      scrollChatToBottom();
-    } catch (error) {
-      console.error("Error:", error);
-      appendMessage("ai", "Sorry, something went wrong!");
-      scrollChatToBottom();
+from flask import Flask, request, jsonify, render_template
+import os
+import requests
+
+app = Flask(__name__)
+
+# Ensure your Anthropic API key is set as an environment variable named ANTHROPIC_API_KEY
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_message = request.json.get("message")
+    # Build your prompt for the AI model – adjust as needed per Anthropic's docs.
+    prompt = f"User: {user_message}\nAssistant:"
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {ANTHROPIC_API_KEY}"
     }
-  });
-  
-  function appendMessage(sender, text) {
-    const chatLog = document.getElementById("chatLog");
-    const messageDiv = document.createElement("div");
-    messageDiv.classList.add("message");
-    messageDiv.classList.add(sender === "user" ? "user-message" : "ai-message");
-    messageDiv.textContent = text;
-    chatLog.appendChild(messageDiv);
-  }
-  
-  function scrollChatToBottom() {
-    const chatLog = document.getElementById("chatLog");
-    chatLog.scrollTop = chatLog.scrollHeight;
-  }
-  
+    
+    # Adjust the payload as per Anthropic's API requirements.
+    payload = {
+        "prompt": prompt,
+        "max_tokens_to_sample": 150,
+        "stop_sequences": ["\n", "User:"]
+    }
+    
+    # Call Anthropic's API endpoint
+    api_url = "https://api.anthropic.com/v1/complete"
+    response = requests.post(api_url, json=payload, headers=headers)
+    
+    if response.status_code == 200:
+        ai_response = response.json().get("completion", "I couldn’t generate a response.")
+    else:
+        ai_response = "Error: Failed to retrieve response from Anthropic API."
+    
+    return jsonify({"response": ai_response})
+
+if __name__ == "__main__":
+    app.run(debug=True)
