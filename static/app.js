@@ -38,7 +38,7 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
 
     // Process AI response before displaying
     if (data.response) {
-      let formattedResponse = formatResponse(data.response);
+      let formattedResponse = formatResponse(data.response, message);
       appendMessage("ai", formattedResponse);
     } else {
       console.warn("⚠️ No response received from AI.");
@@ -55,17 +55,34 @@ document.getElementById("chatForm").addEventListener("submit", async (e) => {
 
 /**
  * Formats AI response:
- * 1. Replaces "Gemini" with "EltekAI"
+ * 1. Replaces "Gemini" with "AbbeyAI"
  * 2. Replaces "Google" with "Eltek"
  * 3. Replaces "trained by Google" with "trained by Eltek in Kenya"
  * 4. Converts **bold text** to <b>bold text</b>
+ * 5. Appends a special message for identity-related prompts
  */
-function formatResponse(text) {
-  return text
+function formatResponse(text, userMessage) {
+  let formattedText = text
     .replace(/Gemini/gi, "AbbeyAI")  // Case-insensitive replacement of "Gemini"
     .replace(/\bGoogle\b/gi, "Eltek") // Replace "Google" anywhere in the text
     .replace(/trained by Eltek/gi, "trained by Eltek in Kenya") // Ensures training info is accurate
     .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Converts **bold** to <b>bold</b>
+
+  // Check if the user is asking about AI's identity or abilities
+  const identityQuestions = [
+    "who are you",
+    "what do you do",
+    "what can you do",
+    "how can you help",
+    "tell me about yourself"
+  ];
+
+  if (identityQuestions.some((q) => userMessage.toLowerCase().includes(q))) {
+    formattedText +=
+      " <br><br> I am being developed to specialize in Medicine and help Abigail Mwihaki get through Med School at JKUAT by guiding her to accurate sources of information. I can also assist you with various queries!";
+  }
+
+  return formattedText;
 }
 
 function appendMessage(sender, text) {
